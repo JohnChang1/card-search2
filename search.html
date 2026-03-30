@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <title>卡片管理系統</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h2>卡片查詢系統</h2>
+        <button class="btn-settings" onclick="toggleModal(true)">⚙ 設定 Rare 列表</button>
+    </div>
+    <form class="toolbar" onsubmit="fetchData(); return false;">
+        <input type="text" id="keyword" placeholder="輸入編號 (例如: loch-jp001)" value="loch-jp001">
+        <select id="rareSelect">
+            <option value="0">全部稀有度</option>
+        </select>
+        <button type="submit" class="btn-search" id="searchBtn">查詢</button>
+    </form> 
+    
+    <table id="resultTable">
+        <thead>
+            <tr>
+                <th width="150">圖片與操作</th>
+                <th>卡片標題</th>
+                <th width="120">稀有度</th>
+                <th width="180">價格範圍</th>
+            </tr>
+        </thead>
+        <tbody id="cardTableBody">
+            <tr><td colspan="4" class="empty-state">請輸入編號並點擊查詢</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<div id="settingsModal">
+    <div class="modal-content">
+        <h3>設定稀有度映射</h3>
+        <p>請貼入 JSON 陣列字串：</p>
+        <textarea id="rareJsonInput"></textarea>
+        <div class="modal-footer">
+            <button onclick="toggleModal(false)" class="btn-cancel">取消</button>
+            <button class="btn-search" onclick="saveSettings()">儲存並更新</button>
+        </div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
