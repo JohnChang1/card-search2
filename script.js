@@ -60,14 +60,11 @@ const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
 const targetUrl = 'https://ygo.iwantcard.tw/api/Goods/getList';
 
 try {
-    const response = await fetch(proxyUrl + targetUrl, {
-        method: 'POST',
-        headers: { 
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest' // 代理伺服器通常需要這個標頭
-        },
-        body: JSON.stringify(payload)
-    });
+        const response = await fetch('https://ygo.iwantcard.tw/api/Goods/getList', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
 
         const res = await response.json();
         const list = res.data.list || [];
