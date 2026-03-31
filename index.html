@@ -2,87 +2,80 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <title>CDN Resource Inspector</title>
+    <title>Google Photos ID Scraper</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 20px; background: #fafafa; }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .input-group { display: flex; gap: 10px; margin-bottom: 20px; }
-        input[type="text"] { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
-        button { padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        button:hover { background: #218838; }
+        body { font-family: monospace; background: #121212; color: #00ff00; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; }
         #log-container { 
-            background: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 5px; 
-            font-family: monospace; font-size: 13px; line-height: 1.5;
-            max-height: 400px; overflow-y: auto;
+            background: #000; border: 1px solid #333; padding: 15px; 
+            border-radius: 4px; overflow-y: auto; height: 80vh;
         }
-        .entry { margin-bottom: 5px; border-bottom: 1px solid #333; padding-bottom: 5px; word-break: break-all; }
-        .tag-manual { color: #ffc107; font-weight: bold; }
-        .tag-auto { color: #17a2b8; font-weight: bold; }
+        .id-entry { margin-bottom: 4px; color: #00ff00; border-bottom: 1px solid #1a1a1a; padding: 2px 0; }
+        .count-header { font-size: 1.2em; margin-bottom: 10px; color: #fff; }
+        button { background: #333; color: #fff; border: 1px solid #555; padding: 5px 15px; cursor: pointer; margin-bottom: 10px; }
+        button:hover { background: #444; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>CDN 路徑檢測工具</h2>
-    
-    <div class="input-group">
-        <input type="text" id="manualPath" placeholder="請貼上 googleusercontent.com 的完整路徑...">
-        <button onclick="testPath()">手動測試</button>
-    </div>
-
-    <div id="log-container">
-        <div id="status">> 正在等待資源載入或手動輸入...</div>
-    </div>
+    <div class="count-header">已偵測到的資源 ID (<span id="counter">0</span>)</div>
+    <button onclick="copyAll()">全部複製</button>
+    <div id="log-container"></div>
 </div>
 
 <script>
     const logContainer = document.getElementById('log-container');
-    const status = document.getElementById('status');
-    const inputField = document.getElementById('manualPath');
+    const counterDisplay = document.getElementById('counter');
+    const seenIds = new Set();
 
-    function appendLog(url, source) {
-        if (status) status.remove();
+    function extractIdAndLog(url) {
+        // 1. 嘗試從 URL 中提取最後一段路徑 (即截圖中的 Name)
+        // 通常 Google Photos 的路徑結構最後一段就是 ID
+        try {
+            const parts = url.split('/');
+            const namePart = parts[parts.length - 1].split('?')[0]; // 移除參數
+
+            // 2. 檢查是否符合截圖中的特徵 (長度長、包含特定前綴)
+            // 你截圖中的字串通常長度大於 20，且為英數混雜
+            if (namePart.length > 20 && !seenIds.has(namePart)) {
+                seenIds.add(namePart);
+                renderId(namePart);
+            }
+        } catch (e) {
+            console.error("解析失敗:", url);
+        }
+    }
+
+    function renderId(id) {
         const div = document.createElement('div');
-        div.className = 'entry';
-        const timestamp = new Date().toLocaleTimeString();
-        const tag = source === 'manual' ? '<span class="tag-manual">[MANUAL]</span>' : '<span class="tag-auto">[AUTO]</span>';
-        div.innerHTML = `[${timestamp}] ${tag} ${url}`;
+        div.className = 'id-entry';
+        div.textContent = id;
         logContainer.prepend(div);
+        counterDisplay.textContent = seenIds.size;
     }
 
-    // 手動輸入處理函數
-    async function testPath() {
-        const url = inputField.value.trim();
-        if (!url) return;
-
-        // 嘗試透過建立 Image 物件觸發瀏覽器的網路請求，使其出現在效能監測中
-        const img = new Image();
-        img.onload = () => {
-            appendLog(url, 'manual');
-            console.log("手動載入成功:", url);
-        };
-        img.onerror = () => {
-            appendLog(url + " (載入失敗，請檢查網址有效性)", 'manual');
-        };
-        img.src = url;
-        
-        inputField.value = ''; // 清空輸入框
+    function copyAll() {
+        const allIds = Array.from(seenIds).join('\n');
+        navigator.clipboard.writeText(allIds).then(() => alert('已複製所有 ID 到剪貼簿'));
     }
 
-    // 原有的自動監控邏輯
+    // 自動監控已存在的資源
+    performance.getEntriesByType("resource").forEach(res => {
+        if (res.name.includes('googleusercontent.com')) {
+            extractIdAndLog(res.name);
+        }
+    });
+
+    // 動態監控新出現的資源 (滾動頁面時)
     const observer = new PerformanceObserver((list) => {
         list.getEntries().forEach((entry) => {
-            if (entry.name.includes('googleusercontent')) {
-                appendLog(entry.name, 'auto');
+            if (entry.name.includes('googleusercontent.com')) {
+                extractIdAndLog(entry.name);
             }
         });
     });
     observer.observe({ entryTypes: ['resource'] });
-
-    // 支援 Enter 鍵觸發
-    inputField.addEventListener("keypress", (e) => {
-        if (e.key === "Enter") testPath();
-    });
 </script>
 
 </body>
