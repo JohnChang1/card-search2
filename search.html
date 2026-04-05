@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
-<head meta name="viewport" content="width=device-width, initial-scale=1.0">
+<head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>卡片管理系統</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -10,39 +11,67 @@
 <div class="container">
     <div class="header">
         <h2>卡片查詢系統</h2>
-        <button class="btn-settings" onclick="toggleModal(true)">⚙ 設定 Rare 列表</button>
+        <button class="btn-settings" onclick="toggleModal(true)">⚙ 設定</button>
     </div>
-    <form class="toolbar" onsubmit="fetchData(); return false;">
+    
+    <div class="toolbar">
         <input type="text" id="keyword" placeholder="輸入編號 (例如: loch-jp001)" value="loch-jp001">
         <select id="rareSelect">
             <option value="0">全部稀有度</option>
         </select>
-        <button type="submit" class="btn-search" id="searchBtn">查詢</button>
-    </form> 
-    
+        <input type="number" id="defaultQty" placeholder="預設數量" value="1" style="flex:0.5;">
+        <input type="number" id="defaultPrice" placeholder="自定義價" style="flex:0.5;">
+        <button type="button" class="btn-search" id="searchBtn" onclick="fetchData()">查詢</button>
+    </div>
+
     <table id="resultTable">
         <thead>
             <tr>
-                <th width="150">圖片與操作</th>
-                <th>卡片標題</th>
-                <th width="120">稀有度</th>
-                <th width="180">價格範圍</th>
+                <th width="100">圖片</th>
+                <th>卡片標題 / 上架名稱</th> 
+                <th width="100">稀有度</th>
+                <th width="120">市場價格</th>
+                <th width="150">數量 / 自訂價</th> 
+                <th width="100">操作</th>
             </tr>
         </thead>
         <tbody id="cardTableBody">
-            <tr><td colspan="4" class="empty-state">請輸入編號並點擊查詢</td></tr>
+            <tr><td colspan="6" class="empty-state">請輸入編號並點擊查詢</td></tr>
         </tbody>
     </table>
 </div>
 
+<div class="container">
+    <h2>地端圖庫 (點擊生成 GitHub CDN 路徑)</h2>
+    <div class="toolbar">
+        <input type="text" id="folderName" placeholder="資料夾名稱 (與 index 同層)">
+        <input type="file" id="filePicker" webkitdirectory directory multiple style="display:none;" onchange="handleFiles(this.files)">
+        <button class="btn-settings" onclick="document.getElementById('filePicker').click()">選擇地端資料夾</button>
+    </div>
+
+    <div id="localGallery" class="album-grid">
+        <p style="color: #999; padding: 20px;">請點擊按鈕選擇你要處理的資料夾...</p>
+    </div>
+
+    <div id="cdnPanel" class="path-panel" style="display: none;">
+        <strong>已組合成 GitHub SDN 路徑：</strong>
+        <div id="cdnUrlDisplay" class="url-text"></div>
+        <button class="btn-copy" onclick="copyCDNPath()">複製路徑</button>
+    </div>
+</div>
+
 <div id="settingsModal">
     <div class="modal-content">
-        <h3>設定稀有度映射</h3>
-        <p>請貼入 JSON 陣列字串：</p>
+        <h3>系統設定</h3>
+        <label>商店名稱設定：</label>
+        <input type="text" id="shopNameInput" placeholder="例如：[微笑小舖]" style="width:100%; margin-bottom:10px;">
+        
+        <label>Rare 列表 (JSON)：</label>
         <textarea id="rareJsonInput"></textarea>
+        
         <div class="modal-footer">
-            <button onclick="toggleModal(false)" class="btn-cancel">取消</button>
-            <button class="btn-search" onclick="saveSettings()">儲存並更新</button>
+            <button class="btn-cancel" onclick="toggleModal(false)">取消</button>
+            <button class="btn-search" onclick="saveSettings()">儲存設定</button>
         </div>
     </div>
 </div>
