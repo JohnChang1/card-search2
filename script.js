@@ -52,15 +52,16 @@ function updateRareDropdown() {
 // --- 3. 核心功能：名稱格式化與清單管理 ---
 
 // 優化後的名稱格式化：[店名] 遊戲王 {卡號去-} {卡號} {純卡名} ({稀有度})
-function formatListingName(cardNoInput, apiTitle, rarity) {
-    const cardNo = cardNoInput.toUpperCase(); // 例如: LOCH-JP002
-    const cardNoClean = cardNo.replace(/-/g, '').toLowerCase(); // 例如: lochjp002
+function formatListingName(officialCardNo, apiTitle, rarity, boxCode) {
+    // 統一格式：卡號去槓(小寫) + 卡號(大寫)
+    const cardNoClean = officialCardNo.replace('-', '');
 
-    // 使用 Regex 移除 API 標題中已有的編號（不分大小寫），避免重複顯示
-    let pureCardName = apiTitle.replace(new RegExp(cardNo, 'gi'), '').trim();
-    pureCardName = pureCardName.replace(/^[-—\s]+/, ''); // 移除剩餘的橫槓或空白
 
-    return `${shopName} 遊戲王 ${cardNoClean} ${cardNo} ${pureCardName} (${rarity})`;
+
+    const suffix = boxCode ? ` ${boxCode.toUpperCase()}` : "";
+    
+    // 輸出格式：[店名] 遊戲王 {去槓小寫} {官方大寫卡號} {純名} ({稀有度}) {代號}
+    return `${shopName} 遊戲王 ${cardNoClean} ${officialCardNo} ${apiTitle} (${rarity})${suffix}`;
 }
 
 // 點擊「寫入」或「快速加入」時執行的動作
@@ -95,41 +96,74 @@ function addToList(data) {
 // --- 4. API 查詢與介面互動 ---
 
 async function fetchData() {
-    const keyword = document.getElementById('keyword').value;
+    // 1. 取得輸入並轉為小寫，去除空白
+    const fullKeyword = document.getElementById('keyword').value.trim().toLowerCase();
     const rareId = document.getElementById('rareSelect').value;
     const tableBody = document.getElementById('cardTableBody');
     const searchBtn = document.getElementById('searchBtn');
 
-    if(!keyword) return;
+    if (!fullKeyword) return;
+
+    // 2. 拆分關鍵字 (同樣保持小寫處理)
+    const parts = fullKeyword.split('-');
+    const prefix = parts[0]; 
+    const suffix = parts.length > 1 ? parts[1] : "";
+
+    console.log(`🔎 偵錯 - Prefix: ${prefix}, Suffix: ${suffix}`);
+
     searchBtn.disabled = true;
-    tableBody.innerHTML = '<tr><td colspan="6" class="empty-state">查詢中...</td></tr>';
+    tableBody.innerHTML = '<tr><td colspan="6" class="empty-state">正在搜尋系列...</td></tr>';
 
     try {
         const response = await fetch('https://ygo.iwantcard.tw/api/Goods/getList', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                "game_id": 1, "type": 1, "key_word": keyword,
-                "rare_id": parseInt(rareId), "page": 1, "page_nums": 50,
-                "order_type": 0, "order_sort": 0, "filter_no_sale": false
+                "game_id": 1,
+                "type": 1,
+                "series_id": "",
+                "rare_id": parseInt(rareId),
+                "page": 1,
+                "page_nums": 100, 
+                "order_type": 0,
+                "order_sort": 0,
+                "periodical_id": 0,
+                "key_word": prefix, // 送出小寫 prefix
+                "show_type": 0,
+                "is_peek": 0,
+                "hot": 0,
+                "filter_no_sale": false
             })
         });
 
         const res = await response.json();
-        const list = res.data.list || [];
+        let list = res.data.list || [];
+   console.log("🔍 偵錯 - 所有回傳標題:", list.map(item => item));
+
+        // 3. 過濾時強制統一轉大寫進行比對 (無視大小寫)
+        if (suffix) {
+            const searchSuffix = suffix.toUpperCase();
+            list = list.filter(item => {
+                // 標題與 Suffix 都轉大寫後比對
+                return item.goods_sn.toUpperCase().includes(searchSuffix);
+            });
+        }
+
         tableBody.innerHTML = '';
         
-        const defQty = document.getElementById('defaultQty').value || 1;
-        const defPrice = document.getElementById('defaultPrice').value || "";
-
         if (list.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="6" class="empty-state">找不到相關卡片。</td></tr>';
+            tableBody.innerHTML = `<tr><td colspan="6" class="empty-state">找不到符合 "${fullKeyword}" 的資料。</td></tr>`;
             return;
         }
 
+        const defQty = document.getElementById('defaultQty').value || 1;
+        const defPrice = document.getElementById('defaultPrice').value || "";
+        const boxCode = document.getElementById('boxCode').value;
+
         list.forEach(item => {
-            const currentKeyword = document.getElementById('keyword').value;
-            const listingName = formatListingName(currentKeyword, item.goods_title, item.rare);
+
+    
+            const listingName = formatListingName(item.goods_sn, item.goods_title, item.rare, boxCode);
             const finalPrice = defPrice || item.sell_min_price;
 
             const tr = document.createElement('tr');
@@ -137,26 +171,26 @@ async function fetchData() {
                 <td><img src="${item.goods_thumb}" class="card-img"></td>
                 <td>
                     <div style="color:#666; font-size:12px;">${item.goods_title}</div>
-                    <div class="listing-name-preview" style="font-weight:bold;">${listingName}</div>
+                    <div class="listing-name-preview" style="background:#fff7e6; padding:5px; border-radius:4px;">${listingName}</div>
                 </td>
-                <td><span class="rare-tag">${item.rare}</span><br><small>(ID: ${item.rare_id})</small></td>
+                <td><span class="rare-tag">${item.rare}</span></td>
                 <td>$${item.sell_min_price} ~ $${item.sell_max_price}</td>
                 <td>
                     <input type="number" class="row-qty" value="${defQty}" style="width:50px;">
                     <input type="number" class="row-price" value="${finalPrice}" style="width:70px;">
                 </td>
                 <td class="action-cell">
-                    <button class="btn-copy" onclick="copyText('${listingName}', this)">名</button>
+                    <button class="btn-copy" onclick="copyText('${listingName.replace(/'/g, "\\'")}', this)">名</button>
                     <button class="btn-search" style="background:#ffc107; color:#000; margin-top:5px;" 
-                        onclick="addToList({title:'${listingName.replace(/'/g, "\\'")}', price:'${finalPrice}', qty:'${defQty}', img:'${item.goods_thumb}'})">加入</button>
+                        onclick="prepareAddToList(this, '${listingName.replace(/'/g, "\\'")}', '${item.goods_thumb}')">加入</button>
                 </td>`;
             tableBody.appendChild(tr);
         });
+
     } catch (error) {
-        tableBody.innerHTML = '<tr><td colspan="6">查詢失敗，請檢查網路。</td></tr>';
+        console.error("Error:", error);
     } finally { 
         searchBtn.disabled = false; 
-        checkGlobalBtn(); 
     }
 }
 

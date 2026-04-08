@@ -17,13 +17,19 @@
 
         <div class="toolbar">
             <input type="text" id="keyword" placeholder="輸入編號 (例如: loch-jp001)">
+
             <select id="rareSelect" onchange="checkGlobalBtn()">
                 <option value="0">全部稀有度</option>
             </select>
-            <input type="number" id="defaultQty" placeholder="數量" value="1" style="width: 70px;">
-            <input type="number" id="defaultPrice" placeholder="自訂價" style="width: 100px;">
+
+            <input type="text" id="boxCode" placeholder="代號" title="卡冊位置代號 (如: A1)" 
+                style="width: 60px; background-color: #fffde7; border-color: #ffd600; flex: none;">
+
+            <input type="number" id="defaultQty" placeholder="數量" value="1" style="width: 50px; flex: none;">
+            <input type="number" id="defaultPrice" placeholder="自訂價" style="width: 80px; flex: none;">
+
             <button class="btn-search" id="searchBtn" onclick="fetchData()">查詢</button>
-            <button id="globalWriteBtn" class="btn-copy" style="background:#ffc107; color:#000; flex:0.5;" onclick="writeCurrentToExcel()" disabled>✍️ 快速加入</button>
+            <button id="globalWriteBtn" class="btn-copy" style="background:#ffc107; color:#000; flex:0.5; min-width: 80px;" onclick="writeCurrentToExcel()" disabled>✍️ 快速加入</button>
         </div>
         <table id="resultTable">
             <thead>
