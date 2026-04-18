@@ -19,6 +19,7 @@ html, body {
 }
 
 /* 左側：查詢系統 (佔 2/3) */
+/* style_new.css */
 .left-panel {
     flex: 2;
     display: flex;
@@ -27,7 +28,9 @@ html, body {
     padding: 20px;
     border-radius: 12px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    min-width: 0; /* 防止 Flex 子元素溢出 */
+    min-width: 0;
+    /* --- 新增下面這行 --- */
+    overflow-y: auto; 
 }
 
 /* 右側：地端圖庫 (佔 1/3) */

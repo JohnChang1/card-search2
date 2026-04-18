@@ -1,0 +1,78 @@
+[
+    {
+        "rare": "浮雕",
+        "rare_id": 1
+    },
+    {
+        "rare": "半鑽",
+        "rare_id": 2
+    },
+    {
+        "rare": "金亮",
+        "rare_id": 3
+    },
+    {
+        "rare": "亮面",
+        "rare_id": 4
+    },
+    {
+        "rare": "普卡",
+        "rare_id": 5
+    },
+    {
+        "rare": "雷射",
+        "rare_id": 31
+    },
+    {
+        "rare": "金鑽",
+        "rare_id": 32
+    },
+    {
+        "rare": "銀字",
+        "rare_id": 35
+    },
+    {
+        "rare": "隱普",
+        "rare_id": 36
+    },
+    {
+        "rare": "斜鑽",
+        "rare_id": 76
+    },
+    {
+        "rare": "普鑽",
+        "rare_id": 77
+    },
+    {
+        "rare": "黃金",
+        "rare_id": 82
+    },
+    {
+        "rare": "雕鑽",
+        "rare_id": 90
+    },
+    {
+        "rare": "紅字半鑽",
+        "rare_id": 92
+    },
+    {
+        "rare": "半鑽全鑽",
+        "rare_id": 94
+    },
+    {
+        "rare": "金亮全鑽",
+        "rare_id": 95
+    },
+    {
+        "rare": "半鑽全鑽",
+        "rare_id": 95
+    },
+    {
+        "rare": "超框金亮",
+        "rare_id": 377
+    },
+    {
+        "rare": "超框白鑽",
+        "rare_id": 378
+    }
+]
