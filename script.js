@@ -212,7 +212,7 @@ async function fetchData2() {
                 "series_id": "",
                 "rare_id": parseInt(rareId),
                 "page": 1,
-                "page_nums": 100, 
+                "page_nums": "", 
                 "order_type": 0,
                 "order_sort": 0,
                 "periodical_id": 0,
@@ -285,24 +285,26 @@ async function fetchData2() {
 // 輔助函式：點擊加入時，抓取該列輸入框的最新數值
 // 輔助函式：點擊加入時，抓取該列輸入框的最新數值
 function prepareAddToList(btn, apiTitle, imgPath) {
-    // 1. 抓取畫面上方的即時欄位數值
-    const keyword = document.getElementById('keyword').value.trim();
-    const qty = document.getElementById('defaultQty').value || 1;
-    const boxCode = document.getElementById('boxCode').value.trim(); // 修正：抓取代號
-    
-    // 2. 抓取該列對應的數值
+    // 1. 先抓取該列對應的數值（要先獲得 row，才能查詢該列的輸入框）
     const row = btn.closest('tr');
     const rarity = row.querySelector('.rare-tag').innerText;
+    
+    // 2. 抓取畫面上方的即時欄位數值
+    const keyword = document.getElementById('keyword').value.trim();
+    const boxCode = document.getElementById('boxCode').value.trim(); // 修正：抓取代號
+    
+    // 修正：優先抓取該列的「自訂數量」輸入框，若為空則抓取上方「預設數量」
+    const rowQtyInput = row.querySelector('.row-qty').value;
+    const qty = rowQtyInput || document.getElementById('defaultQty').value || 1;
     
     // 修正：優先抓取該列的「自訂價」輸入框，若為空則抓取上方「預設自訂價」
     const rowPriceInput = row.querySelector('.row-price').value;
     const price = rowPriceInput || document.getElementById('defaultPrice').value || "";
     
-    // 3. 生成包含代號的商品名稱 (傳入 boxCode)
-    // 格式範例：[微笑小舖] 遊戲王 {去槓卡號} {官方卡號} {卡名} ({稀有度}) {代號}
-    let listingName = formatListingName(keyword, apiTitle, rarity);
+    // 3. 直接使用列表中的預覽名稱（上架名稱）
+    let listingName = row.querySelector('.listing-name-preview').innerText;
     if (boxCode) {
-        listingName += ` ${boxCode}`; // 手動將代號串接在名稱最後
+        listingName += ` ${boxCode}`; // 如果有代號，附加到末尾
     }
     
     // 4. 呼叫加入清單
@@ -317,7 +319,6 @@ function prepareAddToList(btn, apiTitle, imgPath) {
     const container = document.getElementById('previewContainer');
     if (container) container.style.display = 'block';
 }
-
 // 頂部工具列的快速加入按鈕
 function writeCurrentToExcel() {
     const keyword = document.getElementById('keyword').value;
